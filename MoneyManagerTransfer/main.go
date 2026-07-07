@@ -60,6 +60,6 @@ func main() {
 	wg.Wait()
 	close(stopPrint)
 
-	fmt.Println("\n========== ИТОГ ==========")
+	fmt.Println("\n итог")
 	manager.PrintAll()
 }

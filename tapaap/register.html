@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> about </title>
+    <style>
+
+        .content {
+            align-items:center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align:center;
+            margin-top: 150px;
+        }
+
+        .button {
+            padding:20px 40px;
+            background-color: #3295ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: sans-serif;
+            
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 22px;
+        }
+
+        .buttonRegister {
+            width: 170px; padding: 10px; display: inline-block;
+            text-align: center;
+            background-color: #f0f0f0;
+            color: black;
+            text-decoration: none;
+            border-radius: 2px;
+            font-family: sans-serif;
+            margin-top: 10px;
+            box-sizing: border-box;
+            border: 1px solid #767676;
+            font-size: 14px;
+        }
+        .button:hover{
+            background-color:#007bff;
+        }
+        .buttonRegister:hover{
+            background-color: #e0e0e0;
+        }
+        form input {
+            display: block;
+            margin-bottom: 10px;
+            width: 170px;
+        }
+        form button {
+            width: 170px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <h1> Регистрация </h1>
+    <p> Ура </p>
+    <form action="/register" method="POST">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Пароль" required>
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    <div id="error"></div>
+    </div>
+</div>
+    <a href="/about"class='button'> Назад </a>
+    <a href="/"class='button'> На главную </a>
+</body>
+</html>

@@ -17,25 +17,25 @@ func NewAccount(id string, money int) *Account {
 func (a *Account) ID() string { return a.id }
 
 func (a *Account) GetMoney() int {
-	//a.mu.RLock()
-	//defer a.mu.RUnlock()
+	defer a.mu.RUnlock()
 	return a.money
 }
 
 func (a *Account) AddMoney(amount int) {
-	//a.mu.Lock()
-	//defer a.mu.Unlock()
+	defer a.mu.Unlock()
 	a.money += amount
 }
+
 func (a *Account) SubMoney(amount int) bool {
-	//a.mu.Lock()
-	//defer a.mu.Unlock()
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	if a.money < amount {
 		return false
 	}
 	a.money -= amount
 	return true
 }
+
 func (a *Account) Lock()    { a.mu.Lock() }
 func (a *Account) Unlock()  { a.mu.Unlock() }
 func (a *Account) RLock()   { a.mu.RLock() }

@@ -1,0 +1,23 @@
+struct list {
+    Value int
+    Left *list
+    Right *list
+}
+
+func FindMax (start *list, int depth) int {
+    if start == nil {
+        return
+    }
+    s := ""
+    head List
+    curr := head
+    for i := 0; i < depth; i++ {
+        if curr.left != nil {
+            head = curr
+            curr = curr.left
+        }
+    
+    s += strconv.Itoa(curr.Value)
+    curr = head
+    curr = head.left
+}б т

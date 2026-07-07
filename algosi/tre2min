@@ -1,0 +1,42 @@
+package main
+
+import "math"
+
+type Node struct {
+	Val   int
+	Left  *Node
+	Right *Node
+}
+
+func findTwoMin(head *Node) int {
+	var dfs func(*Node)
+	min1 := math.MaxInt64
+	min2 := math.MaxInt64
+
+	dfs = func(curr *Node) {
+		if curr == nil {
+			return
+		}
+
+		if curr.Val < min1 {
+			min2 = min1
+			min1 = curr.Val
+		} else if curr.Val > min1 && curr.Val < min2 {
+			min2 = curr.Val
+		}
+
+		dfs(curr.Left)
+		dfs(curr.Right)
+	}
+	dfs(head)
+	if min1 == math.MaxInt64 {
+		return -1
+	}
+
+	return min2
+
+}
+
+func main() {
+
+}
