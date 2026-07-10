@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Мои задачи</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            font-family: sans-serif;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .add-form {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .add-form input {
+            padding: 8px;
+            margin-right: 10px;
+        }
+        .add-form input[type="text"] {
+            width: 200px;
+        }
+        .task {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-info {
+            flex: 1;
+        }
+        .task-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .task-title.done {
+            text-decoration: line-through;
+            color: #888;
+        }
+        .task-desc {
+            color: #666;
+            font-size: 14px;
+        }
+        .task-status {
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background: #e0e0e0;
+        }
+        .task-status.done {
+            background: #4CAF50;
+            color: white;
+        }
+        .task-status.active {
+            background: #2196F3;
+            color: white;
+        }
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .task-actions button {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-delete {
+            background: #f44336;
+            color: white;
+        }
+        .btn-delete:hover {
+            background: #d32f2f;
+        }
+        .btn-toggle {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-toggle:hover {
+            background: #388E3C;
+        }
+        .btn-back {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3295ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .btn-back:hover {
+            background: #007bff;
+        }
+        .empty {
+            text-align: center;
+            color: #888;
+            padding: 40px;
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Мои задачи</h1>
+            <a href="/" class="btn-back">На главную</a>
+        </div>
+
+        <div id="error" class="error" style="display:none;"></div>
+
+        <div class="add-form">
+            <h3>Добавить задачу</h3>
+            <form method="POST" action="/tasks">
+                <input type="text" name="title" placeholder="Название задачи" required>
+                <input type="text" name="description" placeholder="Описание (необязательно)">
+                <button type="submit">Добавить</button>
+            </form>
+        </div>
+
+        <div id="tasks-list">
+            {{ if .Tasks }}
+                {{ range .Tasks }}
+                    <div class="task">
+                        <div class="task-info">
+                            <div class="task-title{{ if eq .Status "done" }} done{{ end }}">
+                                {{ .Title }}
+                            </div>
+                            {{ if .Description }}
+                                <div class="task-desc">{{ .Description }}</div>
+                            {{ end }}
+                            <span class="task-status {{ .Status }}">
+                                {{ if eq .Status "done" }}Выполнено{{ else }}Активно{{ end }}
+                            </span>
+                        </div>
+                        <div class="task-actions">
+                            <form method="POST" action="/tasks/toggle">
+                                <input type="hidden" name="task_id" value="{{ .ID }}">
+                                <button type="submit" class="btn-toggle">
+                                    {{ if eq .Status "done" }}↩ Вернуть{{ else }}Выполнить{{ end }}
+                                </button>
+                            </form>
+                            <form method="POST" action="/tasks/delete">
+                                <input type="hidden" name="task_id" value="{{ .ID }}">
+                                <button type="submit" class="btn-delete">Удалить</button>
+                            </form>
+                        </div>
+                    </div>
+                {{ end }}
+            {{ else }}
+                <div class="empty">
+                    <p>У вас пока нет задач</p>
+                    <p style="font-size:14px;">Создайте свою первую задачу выше!</p>
+                </div>
+            {{ end }}
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMsg = urlParams.get('error');
+        if (errorMsg) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = decodeURIComponent(errorMsg);
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -2,10 +2,7 @@ package manager
 
 import (
 	"fmt"
-	"math/rand"
 	"mnogo/bank"
-	"sync"
-	"time"
 )
 
 type Manager struct {
@@ -23,39 +20,16 @@ func NewManager(accounts []*bank.Account) *Manager {
 		find:     find,
 	}
 }
-func Transfer(from, to *bank.Account, mon int, wg *sync.WaitGroup) {
-	defer wg.Done()
 
-	time.Sleep(time.Millisecond * time.Duration(rand.Intn(50)))
-
-	if from.ID() < to.ID() {
-		from.Lock()
-		to.Lock()
-	} else {
-		to.Lock()
-		from.Lock()
-	}
-	defer from.Unlock()
-	defer to.Unlock()
-
-	if from.GetMoney() < mon {
-		fmt.Printf("%s -> %s: не хватает денег (есть %d, нужно %d)\n",
-			from.ID(), to.ID(), from.GetMoney(), mon)
-		return
-	}
-
-	from.SubMoney(mon)
-	to.AddMoney(mon)
-	fmt.Printf("%s -> %s: %d\n", from.ID(), to.ID(), mon)
+func (m *Manager) GetAccount(id string) *bank.Account {
+	return m.find[id]
 }
 
-func PrintAll(accounts []*bank.Account) {
+func (m *Manager) PrintAll() {
 	total := 0
-	for _, acc := range accounts {
-		acc.RLock()
+	for _, acc := range m.accounts {
 		fmt.Printf("%s: %d\n", acc.ID(), acc.GetMoney())
 		total += acc.GetMoney()
-		acc.RUnlock()
 	}
 	fmt.Printf("Общий баланс: %d\n", total)
 }

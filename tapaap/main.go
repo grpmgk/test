@@ -11,9 +11,19 @@ import (
 	"strings"
 	"tapaap/config"
 	"tapaap/utils"
+	"time"
 
 	_ "github.com/lib/pq"
 )
+
+type Task struct {
+	ID          int
+	Title       string
+	Description string
+	Status      string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
 
 // ()
 func main() {
@@ -29,6 +39,16 @@ func main() {
 		password TEXT NOT NULL,
 		name TEXT
 	)`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tasks (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    status TEXT DEFAULT 'active', -- или 'active', 'done'
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+	)`)
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -208,6 +228,202 @@ func main() {
 		})
 		http.Redirect(w, r, "/", http.StatusFound)
 	})
+
+	http.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("email")
+		if err != nil {
+			http.Redirect(w, r, "/about", http.StatusFound)
+			return
+		}
+		email := cookie.Value
+
+		var userID int
+		err = db.QueryRow(`SELECT id FROM users WHERE email=$1`, email).Scan(&userID)
+		if err != nil {
+			http.Error(w, "User not found", http.StatusUnauthorized)
+			return
+		}
+
+		if r.Method == "POST" {
+			title := r.FormValue("title")
+			description := r.FormValue("description")
+
+			if title == "" {
+				http.Redirect(w, r, "/tasks?error="+url.QueryEscape("Название задачи обязательно"), http.StatusFound)
+				return
+			}
+
+			_, err = db.Exec(`INSERT INTO tasks (user_id, title, description) VALUES ($1, $2, $3)`,
+				userID, title, description)
+			if err != nil {
+				http.Redirect(w, r, "/tasks?error="+url.QueryEscape("Ошибка базы данных"), http.StatusFound)
+				return
+			}
+
+			http.Redirect(w, r, "/tasks", http.StatusFound)
+			return
+		}
+
+		// GET - показываем список задач
+		rows, err := db.Query(`SELECT id, title, description, status FROM tasks WHERE user_id=$1 ORDER BY created_at DESC`, userID)
+		if err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var tasks []Task
+		for rows.Next() {
+			var task Task
+			err := rows.Scan(&task.ID, &task.Title, &task.Description, &task.Status)
+			if err != nil {
+				http.Error(w, "Error scanning task", http.StatusInternalServerError)
+				return
+			}
+			tasks = append(tasks, task)
+		}
+
+		htmlBytes, err := os.ReadFile("tasks.html")
+		if err != nil {
+			http.Error(w, "Ошибка загрузки страницы", http.StatusInternalServerError)
+			return
+		}
+
+		html := string(htmlBytes)
+		var tasksHTML string
+
+		if len(tasks) == 0 {
+			tasksHTML = `<div class="empty"><p>📭 У вас пока нет задач</p><p style="font-size:14px;">Создайте свою первую задачу выше!</p></div>`
+		} else {
+			for _, task := range tasks {
+				statusText := "Активно"
+				statusClass := "active"
+				if task.Status == "done" {
+					statusText = "Выполнено"
+					statusClass = "done"
+				}
+
+				titleClass := ""
+				if task.Status == "done" {
+					titleClass = " done"
+				}
+
+				toggleText := "Выполнить"
+				if task.Status == "done" {
+					toggleText = "Вернуть"
+				}
+
+				tasksHTML += `<div class="task">
+					<div class="task-info">
+						<div class="task-title` + titleClass + `">` + task.Title + `</div>`
+
+				if task.Description != "" {
+					tasksHTML += `<div class="task-desc">` + task.Description + `</div>`
+				}
+
+				tasksHTML += `<span class="task-status ` + statusClass + `">` + statusText + `</span>
+					</div>
+					<div class="task-actions">
+						<form method="POST" action="/tasks/toggle">
+							<input type="hidden" name="task_id" value="` + fmt.Sprint(task.ID) + `">
+							<button type="submit" class="btn-toggle">` + toggleText + `</button>
+						</form>
+						<form method="POST" action="/tasks/delete">
+							<input type="hidden" name="task_id" value="` + fmt.Sprint(task.ID) + `">
+							<button type="submit" class="btn-delete">Удалить</button>
+						</form>
+					</div>
+				</div>`
+			}
+		}
+
+		html = strings.Replace(html, "{{ if .Tasks }}", "", 1)
+		html = strings.Replace(html, "{{ else }}", "", 1)
+		html = strings.Replace(html, "{{ end }}", "", 1)
+		html = strings.Replace(html, "{{ range .Tasks }}", "", 1)
+		html = strings.Replace(html, "{{ .Title }}", "", 1)
+		html = strings.Replace(html, "{{ .Description }}", "", 1)
+		html = strings.Replace(html, "{{ .Status }}", "", 1)
+		html = strings.Replace(html, "{{ .ID }}", "", 1)
+
+		html = strings.Replace(html, `<div id="tasks-list">`, `<div id="tasks-list">`+tasksHTML, 1)
+
+		fmt.Fprint(w, html)
+	})
+	//	deletetask
+	http.HandleFunc("/tasks/delete", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		cookie, err := r.Cookie("email")
+		if err != nil {
+			http.Redirect(w, r, "/about", http.StatusFound)
+			return
+		}
+		email := cookie.Value
+
+		var userID int
+		err = db.QueryRow(`SELECT id FROM users WHERE email=$1`, email).Scan(&userID)
+		if err != nil {
+			http.Error(w, "User not found", http.StatusUnauthorized)
+			return
+		}
+
+		taskID := r.FormValue("task_id")
+		if taskID == "" {
+			http.Redirect(w, r, "/tasks?error="+url.QueryEscape("ID задачи не указан"), http.StatusFound)
+			return
+		}
+
+		_, err = db.Exec(`DELETE FROM tasks WHERE id=$1 AND user_id=$2`, taskID, userID)
+		if err != nil {
+			http.Redirect(w, r, "/tasks?error="+url.QueryEscape("Ошибка удаления"), http.StatusFound)
+			return
+		}
+
+		http.Redirect(w, r, "/tasks", http.StatusFound)
+	})
+	//managetask
+	http.HandleFunc("/tasks/toggle", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		cookie, err := r.Cookie("email")
+		if err != nil {
+			http.Redirect(w, r, "/about", http.StatusFound)
+			return
+		}
+		email := cookie.Value
+
+		var userID int
+		err = db.QueryRow(`SELECT id FROM users WHERE email=$1`, email).Scan(&userID)
+		if err != nil {
+			http.Error(w, "User not found", http.StatusUnauthorized)
+			return
+		}
+
+		taskID := r.FormValue("task_id")
+		if taskID == "" {
+			http.Redirect(w, r, "/tasks?error="+url.QueryEscape("ID задачи не указан"), http.StatusFound)
+			return
+		}
+
+		_, err = db.Exec(`UPDATE tasks SET status = CASE 
+			WHEN status = 'active' THEN 'done' 
+			ELSE 'active' 
+		END WHERE id=$1 AND user_id=$2`, taskID, userID)
+		if err != nil {
+			http.Redirect(w, r, "/tasks?error="+url.QueryEscape("Ошибка обновления статуса"), http.StatusFound)
+			return
+		}
+
+		http.Redirect(w, r, "/tasks", http.StatusFound)
+	})
+
 	fmt.Println("Сервер запущен на порту http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }
