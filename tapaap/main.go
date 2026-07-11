@@ -293,7 +293,7 @@ func main() {
 		var tasksHTML string
 
 		if len(tasks) == 0 {
-			tasksHTML = `<div class="empty"><p>📭 У вас пока нет задач</p><p style="font-size:14px;">Создайте свою первую задачу выше!</p></div>`
+			tasksHTML = `<div class="empty"><p>У вас пока нет задач</p><p style="font-size:14px;">Создайте свою первую задачу выше!</p></div>`
 		} else {
 			for _, task := range tasks {
 				statusText := "Активно"
@@ -337,14 +337,14 @@ func main() {
 			}
 		}
 
-		html = strings.Replace(html, "{{ if .Tasks }}", "", 1)
-		html = strings.Replace(html, "{{ else }}", "", 1)
-		html = strings.Replace(html, "{{ end }}", "", 1)
-		html = strings.Replace(html, "{{ range .Tasks }}", "", 1)
-		html = strings.Replace(html, "{{ .Title }}", "", 1)
-		html = strings.Replace(html, "{{ .Description }}", "", 1)
-		html = strings.Replace(html, "{{ .Status }}", "", 1)
-		html = strings.Replace(html, "{{ .ID }}", "", 1)
+		// html = strings.Replace(html, "{{ if .Tasks }}", "", 1)
+		// html = strings.Replace(html, "{{ else }}", "", 1)
+		// html = strings.Replace(html, "{{ end }}", "", 1)
+		// html = strings.Replace(html, "{{ range .Tasks }}", "", 1)
+		// html = strings.Replace(html, "{{ .Title }}", "", 1)
+		// html = strings.Replace(html, "{{ .Description }}", "", 1)
+		// html = strings.Replace(html, "{{ .Status }}", "", 1)
+		// html = strings.Replace(html, "{{ .ID }}", "", 1)
 
 		html = strings.Replace(html, `<div id="tasks-list">`, `<div id="tasks-list">`+tasksHTML, 1)
 

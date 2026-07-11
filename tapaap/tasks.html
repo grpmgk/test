@@ -119,7 +119,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📋 Мои задачи</h1>
+            <h1>Мои задачи</h1>
             <a href="/" class="btn-back">На главную</a>
         </div>
 
@@ -135,40 +135,6 @@
         </div>
 
         <div id="tasks-list">
-            {{ if .Tasks }}
-                {{ range .Tasks }}
-                    <div class="task">
-                        <div class="task-info">
-                            <div class="task-title{{ if eq .Status "done" }} done{{ end }}">
-                                {{ .Title }}
-                            </div>
-                            {{ if .Description }}
-                                <div class="task-desc">{{ .Description }}</div>
-                            {{ end }}
-                            <span class="task-status {{ .Status }}">
-                                {{ if eq .Status "done" }}Выполнено{{ else }}Активно{{ end }}
-                            </span>
-                        </div>
-                        <div class="task-actions">
-                            <form method="POST" action="/tasks/toggle">
-                                <input type="hidden" name="task_id" value="{{ .ID }}">
-                                <button type="submit" class="btn-toggle">
-                                    {{ if eq .Status "done" }}↩ Вернуть{{ else }}Выполнить{{ end }}
-                                </button>
-                            </form>
-                            <form method="POST" action="/tasks/delete">
-                                <input type="hidden" name="task_id" value="{{ .ID }}">
-                                <button type="submit" class="btn-delete">Удалить</button>
-                            </form>
-                        </div>
-                    </div>
-                {{ end }}
-            {{ else }}
-                <div class="empty">
-                    <p>У вас пока нет задач</p>
-                    <p style="font-size:14px;">Создайте свою первую задачу выше!</p>
-                </div>
-            {{ end }}
         </div>
     </div>
 
