@@ -25,7 +25,6 @@ type Task struct {
 	UpdatedAt   time.Time
 }
 
-// ()
 func main() {
 	connStr := "host=localhost port=5433 user=myuser password=mypass dbname=mydb sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
@@ -39,6 +38,11 @@ func main() {
 		password TEXT NOT NULL,
 		name TEXT
 	)`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS tasks (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -131,7 +135,6 @@ func main() {
 			email, hashedPassword)
 
 		if err != nil {
-			// Если email уже существует — будет ошибка UNIQUE
 			showRegisterWithError(w, "Пользователь с такой почтой уже существует")
 			return
 		}
