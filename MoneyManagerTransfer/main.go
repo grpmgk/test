@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"math/rand"
 	"mnogo/bank"
-	"mnogo/manager"
 	"sync"
 	"time"
 )
 
 func main() {
-	manager := manager.NewManager([]*bank.Account{
-		bank.NewAccount("A", 1000),
-		bank.NewAccount("B", 500),
-		bank.NewAccount("C", 300),
-	})
+	// manager := bank.NewManager()
+	// accA := manager.CreateAccount("A", 1000)
+	// accB := manager.CreateAccount("B", 500)
+	// accC := manager.CreateAccount("C", 300)
+
+	manager := bank.NewManager("A", 1000)
+	accB := manager.CreateAccount("B", 500)
+	accC := manager.CreateAccount("C", 300)
 
 	fmt.Println("начало")
 	manager.PrintAll()
@@ -46,17 +48,31 @@ func main() {
 			toName = names[rand.Intn(3)]
 		}
 
-		amount := rand.Intn(500) + 1
+		var from, to *bank.Account
+		switch fromName {
+		case "A":
+			from = manager.Account
+		case "B":
+			from = accB
+		case "C":
+			from = accC
+		}
+		switch toName {
+		case "A":
+			to = manager.Account
+		case "B":
+			to = accB
+		case "C":
+			to = accC
+		}
 
-		from := manager.GetAccount(fromName)
-		to := manager.GetAccount(toName)
+		amount := rand.Intn(500) + 1
 
 		wg.Add(1)
 		go bank.Transfer(from, to, amount, &wg)
 
 		time.Sleep(5 * time.Millisecond)
 	}
-
 	wg.Wait()
 	close(stopPrint)
 

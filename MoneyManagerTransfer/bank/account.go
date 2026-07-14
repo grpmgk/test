@@ -8,9 +8,10 @@ type Account struct {
 	id    string
 	money int
 	mu    sync.RWMutex
+	//*Manager
 }
 
-func NewAccount(id string, money int) *Account {
+func NewAccount(id string, money int, m *Manager) *Account {
 	return &Account{id: id, money: money}
 }
 
